@@ -26,6 +26,7 @@ Route::post('login', [AuthController::class, 'login']);
 // Route::post('change-password', [AuthController::class, 'changePassword']);
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('me', [AuthController::class, 'me'])->middleware('auth:sanctum');
+Route::get('current-user', [AuthController::class, 'getCurrentUser'])->middleware('auth:sanctum');
 
 Route::get('/projects', [ProjectController::class, 'index']);
 Route::post('/projects', [ProjectController::class, 'create']);

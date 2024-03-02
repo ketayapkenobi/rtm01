@@ -58,4 +58,24 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    public function getCurrentUser()
+    {
+        // Retrieve the currently authenticated user
+        $user = Auth::user();
+
+        if ($user) {
+            // User is logged in, return user information
+            return response()->json([
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role->name,
+                // Add any other fields you want to include
+            ], 200);
+        } else {
+            // No user is currently logged in
+            return response()->json(['message' => 'No user logged in.'], 401);
+        }
+    }
 }
