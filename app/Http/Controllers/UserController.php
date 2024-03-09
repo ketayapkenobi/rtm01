@@ -19,9 +19,38 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $sql = User::query();
+
+        if ($request->roles) {
+            $roles_param = explode(",", $request->roles);
+
+            $sql->whereHas('roles', function ($q) use ($roles_param) {
+                $q->whereIn('id', $roles_param);
+            });
+        }
+
+        if (isset($request->keyword)) {
+            $sql->where('name', 'like', '%' . $request->keyword . '%')
+                ->orWhere('staff_no', 'like', '%' . $request->keyword . '%');
+        }
+
+        if (isset($request->size))
+            $users = $sql->paginate($request->size);
+        else
+            $users = $sql->get();
+
+        // Transform user data to include role name
+        $users = $users->map(function ($user) {
+            $user->role_name = $user->role ? $user->role->name : null;
+            unset($user->role); // Remove the 'role' attribute from the user object
+            return $user;
+        });
+
+        return response()->json([
+            'users' => $users
+        ], 200);
     }
 
     /**
@@ -34,6 +63,8 @@ class UserController extends Controller
                 'email'    => 'required|email',
                 'password' => 'required',
                 'name'     => 'required',
+                'role_id'  => 'required',
+                'userID'   => 'required',
             ]);
 
             if ($validateUser->fails()) {
@@ -47,6 +78,8 @@ class UserController extends Controller
                 'email'    => $request->email,
                 'password' => Hash::make($request->password),
                 'name'     => $request->name,
+                'role_id'  => $request->role_id,
+                'userID'   => $request->userID,
             ];
 
             $user = User::create($data);
@@ -58,20 +91,25 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        //
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'user not found'], 404);
+        }
+
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        // $user->role_list = $userRoles;
+        // $user->permission_list = $user->getAllPermissions()->pluck('name')->toArray();
+        // $user->direct_permissions = $user->getPermissionNames();
+
+        return response()->json($user, 200);
     }
 
     /**

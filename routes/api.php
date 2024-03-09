@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,13 +29,22 @@ Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanct
 Route::get('me', [AuthController::class, 'me'])->middleware('auth:sanctum');
 Route::get('current-user', [AuthController::class, 'getCurrentUser'])->middleware('auth:sanctum');
 
-Route::get('/projects', [ProjectController::class, 'index']);
+Route::get('/projects', [ProjectController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/projects', [ProjectController::class, 'create']);
 Route::get('/projects/{id}', [ProjectController::class, 'show']);
 Route::put('/projects/{id}', [ProjectController::class, 'update']);
 Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 
+Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'create']);
+Route::get('/users/{id}', [UserController::class, 'show']);
+
+Route::get('/roles', [RoleController::class, 'index']);
+
+
+
+
+
 
 
 
