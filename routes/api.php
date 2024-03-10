@@ -34,6 +34,7 @@ Route::post('/projects', [ProjectController::class, 'create']);
 Route::get('/projects/{id}', [ProjectController::class, 'show']);
 Route::put('/projects/{id}', [ProjectController::class, 'update']);
 Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+Route::get('/projects/check/{id}', [ProjectController::class, 'checkProjectIdExists']);
 
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'create']);
