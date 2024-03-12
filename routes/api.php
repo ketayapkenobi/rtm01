@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ProjectMemberController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +36,10 @@ Route::get('/projects/{id}', [ProjectController::class, 'show']);
 Route::put('/projects/{id}', [ProjectController::class, 'update']);
 Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 Route::get('/projects/check/{id}', [ProjectController::class, 'checkProjectIdExists']);
+
+// Route::post('/projects/assign-user', [ProjectMemberController::class, 'assignUser']);
+Route::get('/projects/{id}/members', [ProjectMemberController::class, 'getProjectMembers']);
+
 
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'create']);

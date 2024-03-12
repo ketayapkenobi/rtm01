@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+Use App\Models\User;
 
 class Project extends Model
 {
@@ -14,4 +15,9 @@ class Project extends Model
         'projectName',
         'projectDesc',
     ];
+
+    public function members()
+    {
+        return $this->belongsToMany(User::class, 'project_members', 'projectID', 'userID');
+    }
 }
