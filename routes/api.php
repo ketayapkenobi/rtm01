@@ -8,6 +8,8 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\PriorityController;
+use App\Http\Controllers\StatusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +41,10 @@ Route::get('/projects/check/{id}', [ProjectController::class, 'checkProjectIdExi
 
 // Route::post('/projects/assign-user', [ProjectMemberController::class, 'assignUser']);
 Route::get('/projects/{id}/members', [ProjectMemberController::class, 'getProjectMembers']);
+
+Route::get('/priority', [PriorityController::class, 'index']);
+Route::get('/status', [StatusController::class, 'index']);
+
 
 
 Route::get('/users', [UserController::class, 'index']);
