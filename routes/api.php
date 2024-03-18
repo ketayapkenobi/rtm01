@@ -10,6 +10,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\PriorityController;
 use App\Http\Controllers\StatusController;
+use App\Http\Controllers\RequirementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,7 +23,7 @@ use App\Http\Controllers\StatusController;
 |
 */
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
@@ -45,7 +46,8 @@ Route::get('/projects/{id}/members', [ProjectMemberController::class, 'getProjec
 Route::get('/priority', [PriorityController::class, 'index']);
 Route::get('/status', [StatusController::class, 'index']);
 
-
+Route::post('/requirements', [RequirementController::class, 'create']);
+Route::get('/projects/{id}/requirements', [RequirementController::class, 'index']);
 
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'create']);

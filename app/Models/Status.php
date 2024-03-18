@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Model\Requirement;
 
 class Status extends Model
 {
@@ -14,4 +15,9 @@ class Status extends Model
     protected $fillable = [
         'name',
     ];
+
+    public function requirements()
+    {
+        return $this->hasMany(Requirement::class);
+    }
 }
