@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Requirement extends Model
+class TestCase extends Model
 {
     use HasFactory;
 
-    protected $table = 'requirements';
+    protected $table = 'test_cases';
 
     protected $fillable = [
-        'requirementID',
+        'testcaseID',
         'name',
         'description',
         'priority_id',
@@ -38,10 +38,5 @@ class Requirement extends Model
     public function status()
     {
         return $this->belongsTo(Status::class);
-    }
-
-    public function project()
-    {
-        return $this->belongsTo(Project::class, 'projectID');
     }
 }

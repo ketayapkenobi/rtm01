@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Model\Requirement;
+use App\Models\Requirement;
+use App\Models\TestCase;
 
 class Status extends Model
 {
@@ -19,5 +20,10 @@ class Status extends Model
     public function requirements()
     {
         return $this->hasMany(Requirement::class);
+    }
+
+    public function testcases()
+    {
+        return $this->hasMany(TestCase::class);
     }
 }
