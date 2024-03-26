@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Requirement;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use App\Models\Requirement;
+use App\Models\TestCase;
 
 class RequirementController extends Controller
 {
@@ -43,6 +45,11 @@ class RequirementController extends Controller
             ->where('project_id', $projectID)
             ->get()
             ->map(function ($requirement) {
+                // Fetch related test cases for each requirement
+                $testCases = DB::table('testcase_requirement')
+                    ->where('requirement_id', $requirement->requirementID)
+                    ->pluck('testcase_id');
+
                 return [
                     'id' => $requirement->id,
                     'requirementID' => $requirement->requirementID,
@@ -55,6 +62,7 @@ class RequirementController extends Controller
                     'project_id' => $requirement->project_id,
                     'created_at' => $requirement->created_at,
                     'updated_at' => $requirement->updated_at,
+                    'testCases' => $testCases, // Include related test cases
                 ];
             });
 
@@ -96,5 +104,14 @@ class RequirementController extends Controller
         $requirement = Requirement::where('requirementID', $requirementID)->first();
 
         return response()->json(['exists' => !!$requirement]);
+    }
+
+    public function getRelatedTestCases($requirementID)
+    {
+        $testCases = DB::table('testcase_requirement')
+            ->where('requirement_id', $requirementID)
+            ->pluck('testcase_id');
+
+        return response()->json(['testCases' => $testCases], 200);
     }
 }

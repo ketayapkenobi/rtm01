@@ -44,4 +44,9 @@ class Requirement extends Model
     {
         return $this->belongsTo(Project::class, 'projectID');
     }
+
+    public function testCases()
+    {
+        return $this->belongsToMany(TestCase::class, 'testcase_requirement', 'requirement_id', 'testcase_id');
+    }
 }

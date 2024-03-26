@@ -39,4 +39,9 @@ class TestCase extends Model
     {
         return $this->belongsTo(Status::class);
     }
+
+    public function requirements()
+    {
+        return $this->belongsToMany(Requirement::class, 'testcase_requirement', 'testcase_id', 'requirement_id');
+    }
 }
