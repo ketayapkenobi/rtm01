@@ -12,7 +12,8 @@ use App\Http\Controllers\PriorityController;
 use App\Http\Controllers\StatusController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\TestCaseController;
-
+use App\Http\Controllers\StepController;
+use App\Http\Controllers\TestPlanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,6 +50,7 @@ Route::put('/projects/{id}', [ProjectController::class, 'update']);
 Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 Route::get('/projects/{projectID}/requirements', [RequirementController::class, 'show']);
 Route::get('/projects/{projectID}/testcases', [TestCaseController::class, 'show']);
+Route::get('/projects/{projectID}/testplans', [TestPlanController::class, 'show']);
 Route::get('/projects/check/{id}', [ProjectController::class, 'checkProjectIdExists']);
 
 // Route::post('/projects/assign-user', [ProjectMemberController::class, 'assignUser']);
@@ -68,6 +70,18 @@ Route::post('/testcases', [TestCaseController::class, 'create']);
 Route::get('/testcases/check/{testcaseID}', [TestCaseController::class, 'checkTestCaseIDExists']);
 Route::put('/testcases/{testcaseID}', [TestCaseController::class, 'update']);
 Route::post('/testcases/{testcaseID}/relate-requirements', [TestCaseController::class, 'relateOrUnrelateRequirements']);
+
+Route::post('/steps', [StepController::class, 'create']);
+Route::get('/steps/{testcaseID}', [StepController::class, 'show']);
+Route::put('/steps/{testcaseID}/{step_order}', [StepController::class, 'update']);
+Route::delete('/steps/{testcaseID}/{step_order}', [StepController::class, 'destroy']);
+
+Route::post('/testplans', [TestPlanController::class, 'create']);
+Route::get('/testplans/{projectID}', [TestPlanController::class, 'getLatestTestPlanNumber']);
+Route::post('/testplans/{testplanID}/assign-testcases', [TestPlanController::class, 'relateOrUnrelateTestCases']);
+Route::delete('/testplans/{testplanID}', [TestPlanController::class, 'destroy']);
+Route::get('/testplans/{testplanID}/related-testcases', [TestPlanController::class, 'getRelatedTestCases']);
+
 // Route::post('/testcases/{testcaseID}/unrelate-requirements', [TestCaseController::class, 'unrelateRequirements']);
 // Route::get('/testcases/{testcaseID}/requirements', [TestCaseController::class, 'getRelatedRequirements']);
 

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Requirement;
 use App\Models\TestCase;
+use App\Models\TestPlan;
 
 class Priority extends Model
 {
@@ -25,5 +26,10 @@ class Priority extends Model
     public function testcases()
     {
         return $this->hasMany(TestCase::class);
+    }
+
+    public function testplans()
+    {
+        return $this->hasMany(TestPlan::class);
     }
 }

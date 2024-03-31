@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TestCase extends Model
+class TestPlan extends Model
 {
     use HasFactory;
 
-    protected $table = 'test_cases';
+    protected $table = 'test_plans';
 
     protected $fillable = [
-        'testcaseID',
+        'testplanID',
         'name',
         'description',
         'priority_id',
@@ -40,13 +40,9 @@ class TestCase extends Model
         return $this->belongsTo(Status::class);
     }
 
-    public function requirements()
+    public function testCases()
     {
-        return $this->belongsToMany(Requirement::class, 'testcase_requirement', 'testcase_id', 'requirement_id');
+        return $this->belongsToMany(TestCase::class, 'testplan_testcase', 'testplan_id', 'testcase_id');
     }
 
-    public function testPlans()
-    {
-        return $this->belongsToMany(TestPlan::class, 'testplan_testcase', 'testcase_id', 'testplan_id');
-    }
 }
