@@ -71,6 +71,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role->name,
+                'userID' => $user->userID,
                 // Add any other fields you want to include
             ], 200);
         } else {

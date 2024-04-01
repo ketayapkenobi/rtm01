@@ -45,6 +45,7 @@ class TestPlanController extends Controller
             ->where('project_id', $projectID)
             ->get()
             ->map(function ($testPlan) {
+                $executionCount = $this->countTestExecutions($testPlan->testplanID)->original['count'];
                 return [
                     'id' => $testPlan->id,
                     'testplanID' => $testPlan->testplanID,
@@ -57,11 +58,13 @@ class TestPlanController extends Controller
                     'project_id' => $testPlan->project_id,
                     'created_at' => $testPlan->created_at,
                     'updated_at' => $testPlan->updated_at,
+                    'execution_count' => $executionCount,
                 ];
             });
 
         return response()->json(['testPlans' => $testPlans], 200);
     }
+
 
     public function update(Request $request, string $id)
     {
@@ -90,7 +93,7 @@ class TestPlanController extends Controller
             return $latestTestPlanNumber;
         }
 
-        return null; // Return null if no test plan is found for the project
+        return 0; // Return 0 if no test plan is found for the project
     }
 
     public function relateOrUnrelateTestCases($testplanID, Request $request)
@@ -149,6 +152,78 @@ class TestPlanController extends Controller
             ->toArray();
 
         return response()->json(['relatedTestCases' => $relatedTestCases], 200);
+    }
+
+    public function countTestExecutions($testplanID)
+    {
+        $count = DB::table('test_executions')
+            ->where('testplanID', $testplanID)
+            ->count();
+
+        return response()->json(['count' => $count], 200);
+    }
+
+    public function countTestExecutionsByProjectID($testplanID)
+    {
+        $projectID = TestPlan::where('testplanID', $testplanID)->value('project_id');
+
+        $latestTestExecution = DB::table('test_executions')
+            ->where('testexecutionID', 'like', '%' . $projectID . '%')
+            ->orderBy('number_of_execution', 'desc')
+            ->first();
+
+        $latestExecutionNumber = $latestTestExecution ? $latestTestExecution->number_of_execution : 0;
+
+        return response()->json(['latest_execution_number' => $latestExecutionNumber], 200);
+    }
+   
+
+    public function execute($testplanID)
+    {
+        // Get the projectID from the test plan
+        $projectID = TestPlan::where('testplanID', $testplanID)->value('project_id');
+
+        // Generate the testexecutionID
+        $count = $this->countTestExecutions($testplanID)->original['count'];
+        $executionNumber = str_pad($count + 1, 2, '0', STR_PAD_LEFT); // Ensure two digits
+        $testexecutionID = "{$projectID}-TE{$executionNumber}";
+
+        // Create the test execution
+        $testExecutionId = DB::table('test_executions')->insertGetId([
+            'testexecutionID' => $testexecutionID,
+            'testplanID' => strtoupper($testplanID),
+            'result_id' => 1,
+            'number_of_execution' => $count + 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Find test cases under the given test plan
+        $testCases = DB::table('testplan_testcase')
+            ->where('testplan_id', $testplanID)
+            ->pluck('testcase_id')
+            ->toArray();
+
+        $steps = DB::table('steps')
+            ->whereIn('testcase_id', $testCases)
+            ->orderBy('testcase_id')
+            ->orderBy('step_order')
+            ->get();
+
+        // Create entries in the test_results table for each step
+        foreach ($steps as $step) {
+            DB::table('test_results')->insert([
+                'testexecution_id' => $testexecutionID,
+                'step_id' => $step->id,
+                'result_id' => 1, // Default value
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json([
+            'steps' => $steps,
+        ], 201);
     }
 
 

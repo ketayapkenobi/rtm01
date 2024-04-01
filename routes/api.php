@@ -14,6 +14,8 @@ use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\TestCaseController;
 use App\Http\Controllers\StepController;
 use App\Http\Controllers\TestPlanController;
+use App\Http\Controllers\TestExecutionController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +53,7 @@ Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 Route::get('/projects/{projectID}/requirements', [RequirementController::class, 'show']);
 Route::get('/projects/{projectID}/testcases', [TestCaseController::class, 'show']);
 Route::get('/projects/{projectID}/testplans', [TestPlanController::class, 'show']);
+Route::get('/projects/{projectID}/testexecutions', [TestExecutionController::class, 'show']);
 Route::get('/projects/check/{id}', [ProjectController::class, 'checkProjectIdExists']);
 
 // Route::post('/projects/assign-user', [ProjectMemberController::class, 'assignUser']);
@@ -81,6 +84,11 @@ Route::get('/testplans/{projectID}', [TestPlanController::class, 'getLatestTestP
 Route::post('/testplans/{testplanID}/assign-testcases', [TestPlanController::class, 'relateOrUnrelateTestCases']);
 Route::delete('/testplans/{testplanID}', [TestPlanController::class, 'destroy']);
 Route::get('/testplans/{testplanID}/related-testcases', [TestPlanController::class, 'getRelatedTestCases']);
+Route::get('/testplans/{testplanID}/number-of-execution', [TestPlanController::class, 'countTestExecutions']);
+Route::get('/testplans/{testplanID}/number-of-execution-per-project', [TestPlanController::class, 'countTestExecutionsByProjectID']);
+Route::post('/testplans/{testplanID}', [TestPlanController::class, 'execute']);
+
+Route::put('/testexecutions/{step_id}', [TestExecutionController::class, 'update']);
 
 // Route::post('/testcases/{testcaseID}/unrelate-requirements', [TestCaseController::class, 'unrelateRequirements']);
 // Route::get('/testcases/{testcaseID}/requirements', [TestCaseController::class, 'getRelatedRequirements']);
