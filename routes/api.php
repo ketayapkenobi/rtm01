@@ -46,6 +46,7 @@ Route::get('current-user', [AuthController::class, 'getCurrentUser'])->middlewar
 // });
 
 Route::get('/projects', [ProjectController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/projects/current-user/{userID}', [ProjectController::class, 'getProjectsByUserId']);
 Route::post('/projects', [ProjectController::class, 'create']);
 Route::get('/projects/{id}', [ProjectController::class, 'show']);
 Route::put('/projects/{id}', [ProjectController::class, 'update']);

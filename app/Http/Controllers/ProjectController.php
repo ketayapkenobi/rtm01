@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Project;
 use App\Models\User;
 
@@ -12,6 +13,28 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Project::all();
+        return response()->json($projects);
+    }
+
+    public function getProjectsByUserId($userId)
+    {
+        // Find the id of the user in the users table
+        $user = DB::table('users')
+                    ->where('userID', $userId)
+                    ->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        // Get all the projectIDs related to the userID in the project_members table
+        $projectIds = DB::table('project_members')
+                        ->where('userID', $user->id)
+                        ->pluck('projectID');
+
+        // Get the projects based on the projectIDs
+        $projects = Project::whereIn('id', $projectIds)->get();
+
         return response()->json($projects);
     }
 
