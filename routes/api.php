@@ -15,6 +15,7 @@ use App\Http\Controllers\TestCaseController;
 use App\Http\Controllers\StepController;
 use App\Http\Controllers\TestPlanController;
 use App\Http\Controllers\TestExecutionController;
+use App\Http\Controllers\ReportController;
 
 
 /*
@@ -45,7 +46,7 @@ Route::get('current-user', [AuthController::class, 'getCurrentUser'])->middlewar
 //     // Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 // });
 
-Route::get('/projects', [ProjectController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/projects', [ProjectController::class, 'index']);
 Route::get('/projects/current-user/{userID}', [ProjectController::class, 'getProjectsByUserId']);
 Route::post('/projects', [ProjectController::class, 'create']);
 Route::get('/projects/{id}', [ProjectController::class, 'show']);
@@ -56,6 +57,13 @@ Route::get('/projects/{projectID}/testcases', [TestCaseController::class, 'show'
 Route::get('/projects/{projectID}/testplans', [TestPlanController::class, 'show']);
 Route::get('/projects/{projectID}/testexecutions', [TestExecutionController::class, 'show']);
 Route::get('/projects/check/{id}', [ProjectController::class, 'checkProjectIdExists']);
+Route::get('/projects/{projectID}/requirements/report', [ReportController::class, 'generateProjectRequirementsReport']);
+Route::get('/projects/{projectID}/testcases/report', [ReportController::class, 'generateProjectTestCasesReport']);
+Route::get('/projects/{projectID}/testplans/report', [ReportController::class, 'generateProjectTestPlansReport']);
+Route::get('/projects/{projectID}/testexecutions/report', [ReportController::class, 'generateProjectTestExecutionsReport']);
+
+Route::get('/projects/{projectID}/reqvstestcase/report', [ReportController::class, 'getRequirementTestcaseMatrix']);
+
 
 // Route::post('/projects/assign-user', [ProjectMemberController::class, 'assignUser']);
 Route::get('/projects/{id}/members', [ProjectMemberController::class, 'getProjectMembers']);
