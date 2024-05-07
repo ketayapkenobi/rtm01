@@ -10,9 +10,11 @@ use App\Models\TestCase;
 
 class TestPlanController extends Controller
 {
-    public function index()
+    public function index($projectID)
     {
-        //
+        $testPlans = TestPlan::where('testplanID', 'like', $projectID . '-TP%')->get(['id', 'testplanID']);
+
+        return response()->json(['testPlans' => $testPlans], 200);
     }
 
     public function create(Request $request)
@@ -225,6 +227,67 @@ class TestPlanController extends Controller
             'steps' => $steps,
         ], 201);
     }
+
+    public function getRelatedTestExecutions($testplanID)
+    {
+        // Get the list of related test executions
+        $relatedTestExecutions = DB::table('test_executions')
+            ->where('testplanID', $testplanID)
+            ->pluck('testexecutionID')
+            ->toArray();
+
+        // Initialize an array to store the progress for each test execution
+        $testExecutionsProgress = [];
+
+        // Calculate progress for each test execution
+        foreach ($relatedTestExecutions as $testexecutionID) {
+            // Call the getProgress function to calculate the progress
+            $progressData = $this->getProgress($testexecutionID);
+
+            // Add the progress data to the array
+            $testExecutionsProgress[] = [
+                'testexecutionID' => $testexecutionID,
+                'progress' => $progressData['progress'],
+                'total_percentage' => $progressData['total_percentage'],
+            ];
+        }
+
+        return response()->json(['testExecutionsProgress' => $testExecutionsProgress], 200);
+    }
+
+    public function getProgress($testexecutionID)
+    {
+        $totalSteps = DB::table('test_results')
+            ->where('testexecution_id', $testexecutionID)
+            ->count();
+
+        $results = DB::table('test_results')
+            ->select('result_id', DB::raw('COUNT(*) as count'))
+            ->where('testexecution_id', $testexecutionID)
+            ->groupBy('result_id')
+            ->orderBy('result_id', 'desc') // Sort by result_id in ascending order
+            ->get();
+
+        $totalPercentage = 0; // Total percentage for all results except result_id = 1
+
+        $progress = [];
+
+        foreach ($results as $result) {
+            $percentage = $totalSteps > 0 ? ($result->count / $totalSteps) * 100 : 0;
+            if ($result->result_id != 1 && $result->result_id != 2) {
+                $totalPercentage += $percentage;
+            }
+        
+            $progress[] = [
+                'result_id' => $result->result_id,
+                'percentage' => $percentage,
+            ];
+        }        
+
+        return ['progress' => $progress, 'total_percentage' => number_format($totalPercentage, 2)];
+    }
+
+
 
 
 }

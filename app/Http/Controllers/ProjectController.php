@@ -103,22 +103,85 @@ class ProjectController extends Controller
         return response()->json($project, 200);
     }
 
+    // public function destroy($id)
+    // {
+    //     $project = Project::find($id);
+
+    //     if (!$project) {
+    //         return response()->json([
+    //             'message' => 'Project not found'
+    //         ], 404);
+    //     }
+
+    //     try {
+    //         DB::beginTransaction();
+
+    //         // Delete related requirements
+    //         DB::table('requirements')->where('project_id', $project->projectID)->delete();
+
+    //         // Delete related test cases
+    //         DB::table('testcases')->where('project_id', $project->projectID)->delete();
+
+    //         // Then delete the project
+    //         $project->delete();
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'message' => 'Successfully deleted'
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'message' => 'Failed to delete project, requirements, and test cases.'
+    //         ], 500);
+    //     }
+    // }
+
     public function destroy($id)
     {
-        $delete = Project::find($id);
+        $project = Project::find($id);
 
-        if (!$delete) {
+        if (!$project) {
             return response()->json([
-                'message' => 'project not found'
+                'message' => 'Project not found'
             ], 404);
         }
 
-        $delete->delete();
+        // Find the IDs of requirements and test cases that would be deleted
+        $deletedRequirements = DB::table('requirements')->where('project_id', $project->projectID)->pluck('requirementID');
+        $deletedTestCases = DB::table('test_cases')->where('project_id', $project->projectID)->pluck('testcaseID');
+        $deletedTestPlans = DB::table('test_plans')->where('project_id', $project->projectID)->pluck('testplanID');
+
+        // Find the IDs of steps related to all the test cases
+        $steps = DB::table('steps')
+            ->whereIn('testcase_id', $deletedTestCases)
+            ->select('id')
+            ->get();
+
+        // Find the IDs in testplan_testcase table that have either the testplanID or testcaseID
+        $testplanTestCaseIds = DB::table('testplan_testcase')
+            ->where(function ($query) use ($deletedTestCases, $deletedTestPlans) {
+                $query->whereIn('testcase_id', $deletedTestCases)
+                    ->orWhereIn('testplan_id', $deletedTestPlans);
+            })
+            ->pluck('id');
 
         return response()->json([
-            'message' => 'successfully deleted'
+            'message' => 'Project, requirements, test cases, test plans, and steps to be deleted:',
+            'project_id' => $project->projectID,
+            'requirements' => $deletedRequirements,
+            'testcases' => $deletedTestCases,
+            'testplans' => $deletedTestPlans,
+            'steps' => $steps->pluck('id'),
+            'testplan_testcase_ids' => $testplanTestCaseIds,
         ], 200);
     }
+
+
+
+
 
     public function checkProjectIdExists($projectId)
     {

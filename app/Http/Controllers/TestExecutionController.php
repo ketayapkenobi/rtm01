@@ -10,9 +10,11 @@ use App\Models\TestResult;
 class TestExecutionController extends Controller
 {
 
-    public function index()
+    public function index($projectID)
     {
-        //
+        $testExecutions = TestExecution::where('testexecutionID', 'like', $projectID . '-TE%')->get(['id', 'testexecutionID']);
+
+        return response()->json(['testExecutions' => $testExecutions], 200);
     }
 
     public function create()
@@ -84,7 +86,7 @@ class TestExecutionController extends Controller
     }
 
 
-    public function update(Request $request, string $step_id)
+    public function update(Request $request, string $testexecution_id, string $step_id)
     {
         $request->validate([
             'actual_result' => 'string',
@@ -93,7 +95,7 @@ class TestExecutionController extends Controller
         ]);
 
         // Assuming 'test_results' is the table name
-        $testResult = DB::table('test_results')->where('step_id', $step_id)->first();
+        $testResult = DB::table('test_results')->where('testexecution_id', $testexecution_id)->where('step_id', $step_id)->first();
 
         if (!$testResult) {
             return response()->json(['message' => 'Test result not found'], 404);
@@ -101,6 +103,7 @@ class TestExecutionController extends Controller
 
         // Update the actual_result, checked_by, and result_id fields
         DB::table('test_results')
+            ->where('testexecution_id', $testexecution_id)
             ->where('step_id', $step_id)
             ->update([
                 'actual_result' => $request->input('actual_result'),
@@ -111,9 +114,40 @@ class TestExecutionController extends Controller
         return response()->json(['message' => 'Test result updated successfully'], 200);
     }
 
-
     public function destroy(string $id)
     {
         //
+    }
+
+    public function getProgress($testexecutionID)
+    {
+        $totalSteps = DB::table('test_results')
+            ->where('testexecution_id', $testexecutionID)
+            ->count();
+
+        $results = DB::table('test_results')
+            ->select('result_id', DB::raw('COUNT(*) as count'))
+            ->where('testexecution_id', $testexecutionID)
+            ->groupBy('result_id')
+            ->orderBy('result_id', 'desc') // Sort by result_id in ascending order
+            ->get();
+
+        $totalPercentage = 0; // Total percentage for all results except result_id = 1
+
+        $progress = [];
+
+        foreach ($results as $result) {
+            $percentage = $totalSteps > 0 ? ($result->count / $totalSteps) * 100 : 0;
+            if ($result->result_id != 1 && $result->result_id != 2) {
+                $totalPercentage += $percentage;
+            }
+        
+            $progress[] = [
+                'result_id' => $result->result_id,
+                'percentage' => $percentage,
+            ];
+        }        
+
+        return response()->json(['progress' => $progress, 'total_percentage' => $totalPercentage], 200);
     }
 }

@@ -99,6 +99,14 @@ class RequirementController extends Controller
         //
     }
 
+    public function showRequirementID($projectID)
+    {
+        $requirementIDs = Requirement::where('project_id', $projectID)
+            ->pluck('requirementID');
+
+        return response()->json(['requirementID' => $requirementIDs], 200);
+    }
+
     public function checkRequirementIDExists($requirementID)
     {
         $requirement = Requirement::where('requirementID', $requirementID)->first();

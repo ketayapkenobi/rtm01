@@ -151,6 +151,14 @@ class TestCaseController extends Controller
         return response()->json(['message' => $message], 200);
     }
 
+    public function showTestCaseID($projectID)
+    {
+        $testcaseIDs = TestCase::where('project_id', $projectID)
+            ->pluck('testcaseID');
+
+        return response()->json(['testcaseIDs' => $testcaseIDs], 200);
+    }
+
     // public function unrelateRequirements($testcaseID, Request $request)
     // {
     //     $testcase = TestCase::where('testcaseID', $testcaseID)->firstOrFail();
