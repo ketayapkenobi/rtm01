@@ -48,6 +48,19 @@ class TestPlanController extends Controller
             ->get()
             ->map(function ($testPlan) {
                 $executionCount = $this->countTestExecutions($testPlan->testplanID)->original['count'];
+
+                $testcases = DB::table('testplan_testcase')
+                    ->where('testplan_id', $testPlan->testplanID)
+                    ->pluck('testcase_id');
+
+                // Fetch requirement IDs based on the fetched test case IDs
+                $requirementIds = DB::table('testcase_requirement')
+                    ->whereIn('testcase_id', $testcases)
+                    ->pluck('requirement_id')
+                    ->unique()
+                    ->values()
+                    ->all();
+
                 return [
                     'id' => $testPlan->id,
                     'testplanID' => $testPlan->testplanID,
@@ -61,6 +74,8 @@ class TestPlanController extends Controller
                     'created_at' => $testPlan->created_at,
                     'updated_at' => $testPlan->updated_at,
                     'execution_count' => $executionCount,
+                    'testcases' => $testcases,
+                    'requirements' => $requirementIds, // Include related requirement IDs
                 ];
             });
 

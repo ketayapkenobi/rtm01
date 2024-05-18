@@ -62,7 +62,6 @@ Route::get('/projects/{projectID}/testcases/report', [ReportController::class, '
 Route::get('/projects/{projectID}/testplans/report', [ReportController::class, 'generateProjectTestPlansReport']);
 Route::get('/projects/{projectID}/testexecutions/report', [ReportController::class, 'generateProjectTestExecutionsReport']);
 
-Route::get('/projects/{projectID}/reqvstestcase/report', [ReportController::class, 'getRequirementTestcaseMatrix']);
 Route::get('/projects/{projectID}/testcaseIDs', [TestCaseController::class, 'showTestCaseID']);
 Route::get('/projects/{projectID}/requirementIDs', [RequirementController::class, 'showRequirementID']);
 
@@ -103,6 +102,11 @@ Route::get('/testplans/{testplanID}/testexecutions', [TestPlanController::class,
 Route::get('/testexecutions/{projectID}', [TestExecutionController::class, 'index']);
 Route::put('/testexecutions/{testexecution_id}/{step_id}', [TestExecutionController::class, 'update']);
 Route::get('/testexecutions/{testexecutionID}/progress', [TestExecutionController::class, 'getProgress']);
+
+Route::get('/coverage/{projectID}/requirements', [ReportController::class, 'getRequirementTestcaseCoverage']);
+Route::get('/coverage/{projectID}/testcases', [ReportController::class, 'getTestcaseTestplanCoverage']);
+Route::get('/coverage/{projectID}/testplans', [ReportController::class, 'getTestplanTestexecutionCoverage']);
+
 
 // Route::post('/testcases/{testcaseID}/unrelate-requirements', [TestCaseController::class, 'unrelateRequirements']);
 // Route::get('/testcases/{testcaseID}/requirements', [TestCaseController::class, 'getRelatedRequirements']);

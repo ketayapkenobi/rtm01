@@ -47,6 +47,11 @@ class TestCaseController extends Controller
                 $requirements = DB::table('testcase_requirement')
                     ->where('testcase_id', $testcase->testcaseID)
                     ->pluck('requirement_id');
+                
+                $testplans = DB::table('testplan_testcase')
+                    ->where('testcase_id', $testcase->testcaseID)
+                    ->pluck('testplan_id');
+
                 return [
                     'id' => $testcase->id,
                     'testcaseID' => $testcase->testcaseID,
@@ -60,11 +65,13 @@ class TestCaseController extends Controller
                     'created_at' => $testcase->created_at,
                     'updated_at' => $testcase->updated_at,
                     'requirements' => $requirements,
+                    'testplans' => $testplans,
                 ];
             });
 
         return response()->json(['testcases' => $testcases], 200);
     }
+
 
     public function update(Request $request, $testcaseID)
     {

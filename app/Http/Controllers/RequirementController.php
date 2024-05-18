@@ -50,6 +50,14 @@ class RequirementController extends Controller
                     ->where('requirement_id', $requirement->requirementID)
                     ->pluck('testcase_id');
 
+                // Fetch all related test plan IDs for the fetched test cases
+                $testPlans = DB::table('testplan_testcase')
+                    ->whereIn('testcase_id', $testCases)
+                    ->pluck('testplan_id')
+                    ->unique()
+                    ->values()
+                    ->all();
+
                 return [
                     'id' => $requirement->id,
                     'requirementID' => $requirement->requirementID,
@@ -62,12 +70,14 @@ class RequirementController extends Controller
                     'project_id' => $requirement->project_id,
                     'created_at' => $requirement->created_at,
                     'updated_at' => $requirement->updated_at,
-                    'testCases' => $testCases, // Include related test cases
+                    'testCases' => $testCases->all(), // Include related test case IDs
+                    'testPlans' => $testPlans, // Include related test plan IDs
                 ];
             });
 
         return response()->json(['requirements' => $requirements], 200);
     }
+
 
     public function update(Request $request, $requirementID)
     {

@@ -121,26 +121,204 @@ class ReportController extends Controller
         ]);
     }
 
-    public function getRequirementTestcaseMatrix($projectId)
+    public function getRequirementTestcaseCoverage($projectID)
     {
-        $requirements = Requirement::where('project_id', $projectId)->get();
-        $testcases = Testcase::where('project_id', $projectId)->get();
+        // Get all requirement IDs for the project
+        $requirements = Requirement::where('project_id', $projectID)->get();
 
-        $matrix = [];
+        // Get the count of associated test cases for each requirement
+        $coverage = [];
+        $totalRequirements = $requirements->count();
+        $coveredRequirements = 0;
         foreach ($requirements as $requirement) {
-            $matrixRow = [];
-            foreach ($testcases as $testcase) {
-                if ($testcase->requirements->contains($requirement->requirementID)) {
-                    $matrixRow[] = 1; // Requirement is linked to test case
-                } else {
-                    $matrixRow[] = 0; // Requirement is not linked to test case
-                }
+            $testcases = DB::table('testcase_requirement')
+                ->where('requirement_id', $requirement->requirementID)
+                ->pluck('testcase_id')
+                ->toArray();
+
+            $testcaseCount = count($testcases);
+
+            if ($testcaseCount > 0) {
+                $coveredRequirements++;
             }
-            $matrix[] = $matrixRow;
+
+            $coverage[] = [
+                'requirement_id' => $requirement->requirementID,
+                'testcase_count' => $testcaseCount,
+                'testcases' => $testcases,
+            ];
         }
 
-        return response()->json(['matrix' => $matrix]);
+        // Calculate coverage percentage
+        $coveragePercentage = $totalRequirements > 0 ? ($coveredRequirements / $totalRequirements) * 100 : 0;
+        $notcoveredPercentage = 100 - $coveragePercentage;
+
+        $coveragePercentageFormatted = number_format($coveragePercentage, 2);
+        $notcoveredPercentageFormatted = number_format($notcoveredPercentage, 2);
+
+        // Get the actual project ID from the projects table
+        $project = DB::table('projects')->where('projectID', $projectID)->first();
+
+        // If the project is not found, return an error message
+        if (!$project) {
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        $actualProjectID = $project->id;
+
+        // Get project members
+        $projectMemberIDs = DB::table('project_members')
+            ->where('projectID', $actualProjectID)
+            ->pluck('userID')
+            ->toArray();
+
+        $projectMembers = DB::table('users')
+            ->whereIn('id', $projectMemberIDs)
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json([
+            'project_id' => $projectID,
+            'total_requirements' => $totalRequirements,
+            'covered_requirements' => $coveredRequirements,
+            'coverage_percentage' => (float) $coveragePercentageFormatted,
+            'notcovered_percentage' => (float) $notcoveredPercentageFormatted,
+            'coverage' => $coverage,
+            'project_members' => $projectMembers,
+        ]);
     }
 
+    public function getTestcaseTestplanCoverage($projectID)
+    {
+        // Get all testcase IDs for the project
+        $testcases = TestCase::where('project_id', $projectID)->get();
 
+        // Get the count of associated test plans for each testcase
+        $coverage = [];
+        $totalTestcases = $testcases->count();
+        $coveredTestcases = 0;
+        foreach ($testcases as $testcase) {
+            $testplans = DB::table('testplan_testcase')
+                ->where('testcase_id', $testcase->testcaseID)
+                ->pluck('testplan_id')
+                ->toArray();
+
+            $testplanCount = count($testplans);
+
+            if ($testplanCount > 0) {
+                $coveredTestcases++;
+            }
+
+            $coverage[] = [
+                'testcase_id' => $testcase->testcaseID,
+                'testplan_count' => $testplanCount,
+                'testplans' => $testplans,
+            ];
+        }
+
+        // Calculate coverage percentage
+        $coveragePercentage = $totalTestcases > 0 ? ($coveredTestcases / $totalTestcases) * 100 : 0;
+        $notcoveredPercentage = 100 - $coveragePercentage;
+
+        $coveragePercentageFormatted = number_format($coveragePercentage, 2);
+        $notcoveredPercentageFormatted = number_format($notcoveredPercentage, 2);
+
+        // Get the actual project ID from the projects table
+        $project = DB::table('projects')->where('projectID', $projectID)->first();
+
+        // If the project is not found, return an error message
+        if (!$project) {
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        $actualProjectID = $project->id;
+
+        // Get project members
+        $projectMemberIDs = DB::table('project_members')
+            ->where('projectID', $actualProjectID)
+            ->pluck('userID')
+            ->toArray();
+
+        $projectMembers = DB::table('users')
+            ->whereIn('id', $projectMemberIDs)
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json([
+            'project_id' => $projectID,
+            'total_testcases' => $totalTestcases,
+            'covered_testcases' => $coveredTestcases,
+            'coverage_percentage' => (float) $coveragePercentageFormatted,
+            'notcovered_percentage' => (float) $notcoveredPercentageFormatted,
+            'coverage' => $coverage,
+            'project_members' => $projectMembers,
+        ]);
+    }
+
+    public function getTestplanTestexecutionCoverage($projectID)
+    {
+        // Get all testplan IDs for the project
+        $testplans = TestPlan::where('project_id', $projectID)->get();
+
+        // Get the count of associated test executions for each testplan
+        $coverage = [];
+        $totalTestplans = $testplans->count();
+        $coveredTestplans = 0;
+        foreach ($testplans as $testplan) {
+            $testexecutions = DB::table('test_executions')
+                ->where('testplanID', $testplan->testplanID)
+                ->pluck('testexecutionID')
+                ->toArray();
+
+            $testexecutionCount = count($testexecutions);
+
+            if ($testexecutionCount > 0) {
+                $coveredTestplans++;
+            }
+
+            $coverage[] = [
+                'testplanID' => $testplan->testplanID,
+                'testexecution_count' => $testexecutionCount,
+                'testexecutions' => $testexecutions,
+            ];
+        }
+
+        // Calculate coverage percentage
+        $coveragePercentage = $totalTestplans > 0 ? ($coveredTestplans / $totalTestplans) * 100 : 0;
+        $notcoveredPercentage = 100 - $coveragePercentage;
+
+        $coveragePercentageFormatted = number_format($coveragePercentage, 2);
+        $notcoveredPercentageFormatted = number_format($notcoveredPercentage, 2);
+
+        // Get the actual project ID from the projects table
+        $project = DB::table('projects')->where('projectID', $projectID)->first();
+
+        // If the project is not found, return an error message
+        if (!$project) {
+            return response()->json(['message' => 'Project not found'], 404);
+        }
+
+        $actualProjectID = $project->id;
+
+        // Get project members
+        $projectMemberIDs = DB::table('project_members')
+            ->where('projectID', $actualProjectID)
+            ->pluck('userID')
+            ->toArray();
+
+        $projectMembers = DB::table('users')
+            ->whereIn('id', $projectMemberIDs)
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json([
+            'project_id' => $projectID,
+            'total_testplans' => $totalTestplans,
+            'covered_testplans' => $coveredTestplans,
+            'coverage_percentage' => (float) $coveragePercentageFormatted,
+            'notcovered_percentage' => (float) $notcoveredPercentageFormatted,
+            'coverage' => $coverage,
+            'project_members' => $projectMembers,
+        ]);
+    }
 }
