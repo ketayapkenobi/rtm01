@@ -40,14 +40,17 @@ class TestCaseController extends Controller
 
     public function show($projectID)
     {
+        // Fetch the test cases with related priority and status
         $testcases = TestCase::with('priority', 'status')
             ->where('project_id', $projectID)
             ->get()
             ->map(function ($testcase) {
+                // Fetch requirements related to the testcase
                 $requirements = DB::table('testcase_requirement')
                     ->where('testcase_id', $testcase->testcaseID)
                     ->pluck('requirement_id');
                 
+                // Fetch test plans related to the testcase
                 $testplans = DB::table('testplan_testcase')
                     ->where('testcase_id', $testcase->testcaseID)
                     ->pluck('testplan_id');
@@ -69,9 +72,23 @@ class TestCaseController extends Controller
                 ];
             });
 
-        return response()->json(['testcases' => $testcases], 200);
-    }
+        // Extract the maximum "TC" number from the requirement IDs
+        $maxTCNumber = TestCase::where('project_id', $projectID)
+            ->get()
+            ->map(function ($testcase) {
+                // Use regular expression to extract the "TC" number
+                if (preg_match('/TC(\d+)$/', $testcase->testcaseID, $matches)) {
+                    return (int) $matches[1];
+                }
+                return 0;
+            })
+            ->max();
 
+        return response()->json([
+            'testcases' => $testcases,
+            'maxTestCaseNumber' => $maxTCNumber
+        ], 200);
+    }
 
     public function update(Request $request, $testcaseID)
     {

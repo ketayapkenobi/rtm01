@@ -135,4 +135,18 @@ class UserController extends Controller
     {
         //
     }
+
+    public function checkUserIDExists(string $userID)
+    {
+        $user = User::where('userID', $userID)->first();
+
+        return response()->json(['exists' => !!$user]);
+    }
+
+    public function checkEmailExists(string $email)
+    {
+        $user = User::where('email', $email)->first();
+
+        return response()->json(['exists' => !!$user]);
+    }
 }

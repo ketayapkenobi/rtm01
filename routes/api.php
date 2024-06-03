@@ -65,7 +65,7 @@ Route::get('/projects/{projectID}/testexecutions/report', [ReportController::cla
 Route::get('/projects/{projectID}/testcaseIDs', [TestCaseController::class, 'showTestCaseID']);
 Route::get('/projects/{projectID}/requirementIDs', [RequirementController::class, 'showRequirementID']);
 
-// Route::post('/projects/assign-user', [ProjectMemberController::class, 'assignUser']);
+Route::post('/projects/assign-user', [ProjectMemberController::class, 'assignUser']);
 Route::get('/projects/{id}/members', [ProjectMemberController::class, 'getProjectMembers']);
 
 Route::get('/priority', [PriorityController::class, 'index']);
@@ -114,6 +114,8 @@ Route::get('/coverage/{projectID}/testplans', [ReportController::class, 'getTest
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'create']);
 Route::get('/users/{id}', [UserController::class, 'show']);
+Route::get('/users/check/{userID}', [UserController::class, 'checkUserIDExists']);
+Route::get('/users/check/email/{email}', [UserController::class, 'checkEmailExists']);
 
 Route::get('/roles', [RoleController::class, 'index']);
 

@@ -41,6 +41,7 @@ class RequirementController extends Controller
 
     public function show($projectID)
     {
+        // Fetch all requirements for the given project ID
         $requirements = Requirement::with('priority', 'status')
             ->where('project_id', $projectID)
             ->get()
@@ -75,8 +76,24 @@ class RequirementController extends Controller
                 ];
             });
 
-        return response()->json(['requirements' => $requirements], 200);
+        // Extract the maximum "R" number from the requirement IDs
+        $maxRNumber = Requirement::where('project_id', $projectID)
+            ->get()
+            ->map(function ($requirement) {
+                // Use regular expression to extract the "R" number
+                if (preg_match('/R(\d+)$/', $requirement->requirementID, $matches)) {
+                    return (int) $matches[1];
+                }
+                return 0;
+            })
+            ->max();
+
+        return response()->json([
+            'requirements' => $requirements,
+            'maxRequirementNumber' => $maxRNumber,
+        ], 200);
     }
+
 
 
     public function update(Request $request, $requirementID)

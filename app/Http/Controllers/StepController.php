@@ -36,9 +36,17 @@ class StepController extends Controller
 
     public function show($testcaseID)
     {
+        // Fetch the steps ordered by step_order
         $steps = Step::where('testcase_id', $testcaseID)->orderBy('step_order')->get();
 
-        return response()->json($steps);
+        // Get the maximum step_order value
+        $maxStepOrder = $steps->max('step_order');
+
+        // Return both steps and maxStepOrder in the response
+        return response()->json([
+            'steps' => $steps,
+            'maxStepOrder' => $maxStepOrder
+        ]);
     }
 
     public function update(Request $request, $testcaseID, $step_order)

@@ -158,7 +158,7 @@ class ProjectController extends Controller
         $steps = DB::table('steps')
             ->whereIn('testcase_id', $deletedTestCases)
             ->select('id')
-            ->get();
+            ->pluck('id');
 
         // Find the IDs in testplan_testcase table that have either the testplanID or testcaseID
         $testplanTestCaseIds = DB::table('testplan_testcase')
@@ -168,20 +168,48 @@ class ProjectController extends Controller
             })
             ->pluck('id');
 
+        // Find the IDs in testcase_requirement table that have either the testcaseID or requirementID
+        $testcaseRequirementIds = DB::table('testcase_requirement')
+            ->whereIn('testcase_id', $deletedTestCases)
+            ->orWhereIn('requirement_id', $deletedRequirements)
+            ->pluck('id');
+
+        // Find the IDs in test_executions table related to the project's test plans
+        $testExecutionIds = DB::table('test_executions')
+            ->whereIn('testplanID', $deletedTestPlans)
+            ->pluck('testexecutionID');
+
+        // Find the IDs in test_results table related to the project's test executions
+        $testResultIds = DB::table('test_results')
+            ->whereIn('testexecution_id', $testExecutionIds)
+            ->pluck('id');
+
+        // Delete the records in the appropriate order to avoid foreign key constraint issues
+        DB::table('test_results')->whereIn('id', $testResultIds)->delete();
+        DB::table('test_executions')->whereIn('testexecutionID', $testExecutionIds)->delete();
+        DB::table('testcase_requirement')->whereIn('id', $testcaseRequirementIds)->delete();
+        DB::table('testplan_testcase')->whereIn('id', $testplanTestCaseIds)->delete();
+        DB::table('steps')->whereIn('id', $steps)->delete();
+        DB::table('test_plans')->whereIn('testplanID', $deletedTestPlans)->delete();
+        DB::table('test_cases')->whereIn('testcaseID', $deletedTestCases)->delete();
+        DB::table('requirements')->whereIn('requirementID', $deletedRequirements)->delete();
+
+        // Finally, delete the project itself
+        $project->delete();
+
         return response()->json([
-            'message' => 'Project, requirements, test cases, test plans, and steps to be deleted:',
+            'message' => 'Project and related records deleted successfully.',
             'project_id' => $project->projectID,
             'requirements' => $deletedRequirements,
             'testcases' => $deletedTestCases,
             'testplans' => $deletedTestPlans,
-            'steps' => $steps->pluck('id'),
+            'steps' => $steps,
             'testplan_testcase_ids' => $testplanTestCaseIds,
+            'testcase_requirement_ids' => $testcaseRequirementIds,
+            'testexecution_ids' => $testExecutionIds,
+            'testresult_ids' => $testResultIds,
         ], 200);
     }
-
-
-
-
 
     public function checkProjectIdExists($projectId)
     {
