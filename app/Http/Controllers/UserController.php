@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
@@ -100,40 +101,107 @@ class UserController extends Controller
         $user = User::find($id);
 
         if (!$user) {
-            return response()->json(['message' => 'user not found'], 404);
+            return response()->json(['message' => 'User not found'], 404);
         }
 
+        // Get the user's roles
         $userRoles = $user->roles->pluck('name')->toArray();
 
-        // $user->role_list = $userRoles;
-        // $user->permission_list = $user->getAllPermissions()->pluck('name')->toArray();
-        // $user->direct_permissions = $user->getPermissionNames();
+        // Get the project IDs the user belongs to
+        $projectIDs = DB::table('project_members')
+                        ->where('userID', $id)
+                        ->pluck('projectID')
+                        ->toArray();
 
+        // Get the names of the projects
+        $projects = DB::table('projects')
+                        ->whereIn('id', $projectIDs)
+                        ->pluck('projectName')
+                        ->toArray();
+
+        // Add the projects to the user data
+        $user->projects = $projects;
+
+        // Return the user data
         return response()->json($user, 200);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
      * Update the specified resource in storage.
      */
+    /**
+ * Update the specified resource in storage.
+ */
+    /**
+ * Update the specified resource in storage.
+ */
     public function update(Request $request, string $id)
     {
-        //
+        try {
+            $user = User::find($id);
+
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            $validateUser = Validator::make($request->all(), [
+                'email'             => 'required|email',
+                'current_password'  => 'required_with:password',
+                'password'          => 'nullable',
+                'name'              => 'required',
+                'role_id'           => 'required',
+                'userID'            => 'required',
+            ]);
+
+            if ($validateUser->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors'  => $validateUser->errors()
+                ], 422);
+            }
+
+            // Verify current password if a new password is provided
+            if ($request->has('password')) {
+                if (!Hash::check($request->current_password, $user->password)) {
+                    return response()->json(['message' => 'Current password is incorrect'], 400);
+                }
+                $user->password = Hash::make($request->password);
+            }
+
+            // Update user attributes
+            $user->email = $request->email;
+            $user->name = $request->name;
+            $user->role_id = $request->role_id;
+            $user->userID = $request->userID;
+            
+            $user->save();
+
+            return response()->json(['message' => 'User updated successfully', 'user' => $user], 200);
+        } catch (\Throwable $th) {
+            Log::error('Update user error: ' . $th->getMessage());
+            return response()->json(['message' => 'Update user failed', 'error' => $th->getMessage()], 500);
+        }
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            // Find the user by ID
+            $user = User::findOrFail($id);
+    
+            // Delete the user
+            $user->delete();
+    
+            // Return a success response
+            return response()->json(['message' => 'User deleted successfully'], 200);
+        } catch (\Exception $e) {
+            // Return an error response if user deletion fails
+            return response()->json(['message' => 'Failed to delete user'], 500);
+        }
     }
 
     public function checkUserIDExists(string $userID)
