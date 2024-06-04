@@ -114,7 +114,9 @@ Route::get('/coverage/{projectID}/testplans', [ReportController::class, 'getTest
 
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'create']);
+Route::put('/users/{id}', [UserController::class, 'update']);
 Route::get('/users/{id}', [UserController::class, 'show']);
+Route::delete('/users/{id}', [UserController::class, 'destroy']);
 Route::get('/users/check/{userID}', [UserController::class, 'checkUserIDExists']);
 Route::get('/users/check/email/{email}', [UserController::class, 'checkEmailExists']);
 
