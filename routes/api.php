@@ -61,6 +61,7 @@ Route::get('/projects/{projectID}/requirements/report', [ReportController::class
 Route::get('/projects/{projectID}/testcases/report', [ReportController::class, 'generateProjectTestCasesReport']);
 Route::get('/projects/{projectID}/testplans/report', [ReportController::class, 'generateProjectTestPlansReport']);
 Route::get('/projects/{projectID}/testexecutions/report', [ReportController::class, 'generateProjectTestExecutionsReport']);
+Route::get('projects/{projectID}/stats', [ProjectController::class, 'getProjectStats']);
 
 Route::get('/projects/{projectID}/testcaseIDs', [TestCaseController::class, 'showTestCaseID']);
 Route::get('/projects/{projectID}/requirementIDs', [RequirementController::class, 'showRequirementID']);

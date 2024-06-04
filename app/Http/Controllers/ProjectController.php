@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\Requirement;
+use App\Models\TestCase;
+use App\Models\TestPlan;
 
 class ProjectController extends Controller
 {
@@ -217,4 +220,94 @@ class ProjectController extends Controller
 
         return response()->json(['exists' => !!$project]);
     }
+
+    public function getProjectStats($projectID)
+    {
+        // Find the project by projectID
+        $project = Project::where('projectID', $projectID)->first();
+
+        if (!$project) {
+            return response()->json(['error' => 'Project not found'], 404);
+        }
+
+        // Count the number of related requirements, test cases, test plans, and test executions
+        $requirementsCount = DB::table('requirements')->where('project_id', $projectID)->count();
+        $testCasesCount = DB::table('test_cases')->where('project_id', $projectID)->count();
+        $testPlansCount = DB::table('test_plans')->where('project_id', $projectID)->count();
+        $testExecutionsCount = DB::table('test_executions')
+            ->whereIn('testplanID', function ($query) use ($projectID) {
+                $query->select('testplanID')->from('test_plans')->where('project_id', $projectID);
+            })
+            ->count();
+
+        // Get requirement-testcase coverage
+        $requirements = Requirement::where('project_id', $projectID)->get();
+        $totalRequirements = $requirements->count();
+        $coveredRequirements = 0;
+        foreach ($requirements as $requirement) {
+            $testcaseCount = DB::table('testcase_requirement')
+                ->where('requirement_id', $requirement->requirementID)
+                ->count();
+
+            if ($testcaseCount > 0) {
+                $coveredRequirements++;
+            }
+        }
+
+        // Get testcase-testplan coverage
+        $testcases = TestCase::where('project_id', $projectID)->get();
+        $totalTestcases = $testcases->count();
+        $coveredTestcases = 0;
+        foreach ($testcases as $testcase) {
+            $testplanCount = DB::table('testplan_testcase')
+                ->where('testcase_id', $testcase->testcaseID)
+                ->count();
+
+            if ($testplanCount > 0) {
+                $coveredTestcases++;
+            }
+        }
+
+        // Get testplan-testexecution coverage
+        $testplans = TestPlan::where('project_id', $projectID)->get();
+        $totalTestplans = $testplans->count();
+        $coveredTestplans = 0;
+        foreach ($testplans as $testplan) {
+            $testexecutionCount = DB::table('test_executions')
+                ->where('testplanID', $testplan->testplanID)
+                ->count();
+
+            if ($testexecutionCount > 0) {
+                $coveredTestplans++;
+            }
+        }
+
+        // Get project members
+        $projectMemberIDs = DB::table('project_members')
+            ->where('projectID', $project->id)
+            ->pluck('userID')
+            ->toArray();
+
+        $projectMembers = DB::table('users')
+            ->whereIn('id', $projectMemberIDs)
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json([
+            'projectID' => $projectID,
+            'requirements_count' => $requirementsCount,
+            'test_cases_count' => $testCasesCount,
+            'test_plans_count' => $testPlansCount,
+            'test_executions_count' => $testExecutionsCount,
+            // 'total_requirements' => $totalRequirements,
+            'covered_requirements' => $coveredRequirements,
+            // 'total_testcases' => $totalTestcases,
+            'covered_testcases' => $coveredTestcases,
+            // 'total_testplans' => $totalTestplans,
+            'covered_testplans' => $coveredTestplans,
+            'project_members' => $projectMembers,
+        ], 200);
+    }
+
+
 }
