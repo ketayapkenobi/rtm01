@@ -36,6 +36,12 @@ class RequirementController extends Controller
             'project_id' => $request->project_id,
         ]);
 
+        // Increment maxNumberOf for category 'requirement'
+        DB::table('max_number_of')
+            ->where('projectID', $request->project_id)
+            ->where('category', 'requirement')
+            ->increment('maxNumberOf');
+
         return response()->json($requirement, 201);
     }
 
@@ -76,17 +82,10 @@ class RequirementController extends Controller
                 ];
             });
 
-        // Extract the maximum "R" number from the requirement IDs
-        $maxRNumber = Requirement::where('project_id', $projectID)
-            ->get()
-            ->map(function ($requirement) {
-                // Use regular expression to extract the "R" number
-                if (preg_match('/R(\d+)$/', $requirement->requirementID, $matches)) {
-                    return (int) $matches[1];
-                }
-                return 0;
-            })
-            ->max();
+        $maxRNumber = DB::table('max_number_of')
+        ->where('projectID', $projectID)
+        ->where('category', 'requirement')
+        ->value('maxNumberOf');
 
         return response()->json([
             'requirements' => $requirements,
@@ -121,9 +120,21 @@ class RequirementController extends Controller
         return response()->json($requirement, 200);
     }
 
-    public function destroy(string $id)
+    public function destroy($requirementID)
     {
-        //
+        // Find the requirement by requirementID
+        $requirement = Requirement::where('requirementID', $requirementID)->firstOrFail();
+
+        // Store the project ID for updating max_number_of
+        $projectID = $requirement->project_id;
+
+        // Delete all rows in testcase_requirement with the requirementID
+        DB::table('testcase_requirement')->where('requirement_id', $requirementID)->delete();
+
+        // Delete the requirement
+        $requirement->delete();
+
+        return response()->json(['message' => 'Requirement and associated test case requirements deleted successfully'], 200);
     }
 
     public function showRequirementID($projectID)

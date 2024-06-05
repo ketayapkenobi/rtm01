@@ -77,11 +77,13 @@ Route::get('/requirements/check/{requirementID}', [RequirementController::class,
 // Route::get('/requirements/{projectID}', [RequirementController::class, 'show']);
 Route::put('/requirements/{requirementID}', [RequirementController::class, 'update']);
 // Route::get('/projects/{id}/requirements', [RequirementController::class, 'index']);
+Route::delete('/requirements/{requirementID}', [RequirementController::class, 'destroy']);
 Route::get('/requirements/{requirementID}/testcases', [RequirementController::class, 'getRelatedTestCases']);
 
 Route::post('/testcases', [TestCaseController::class, 'create']);
 Route::get('/testcases/check/{testcaseID}', [TestCaseController::class, 'checkTestCaseIDExists']);
 Route::put('/testcases/{testcaseID}', [TestCaseController::class, 'update']);
+Route::delete('/testcases/{testcaseID}', [TestCaseController::class, 'destroy']);
 Route::post('/testcases/{testcaseID}/relate-requirements', [TestCaseController::class, 'relateOrUnrelateRequirements']);
 
 Route::post('/steps', [StepController::class, 'create']);

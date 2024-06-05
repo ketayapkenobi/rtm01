@@ -37,9 +37,13 @@ class TestPlanController extends Controller
             'project_id' => $request->project_id,
         ]);
 
+        DB::table('max_number_of')
+        ->where('projectID', $request->project_id)
+        ->where('category', 'testplan')
+        ->increment('maxNumberOf');
+
         return response()->json($testPlan, 201);
     }
-
 
     public function show($projectID)
     {
@@ -79,7 +83,15 @@ class TestPlanController extends Controller
                 ];
             });
 
-        return response()->json(['testPlans' => $testPlans], 200);
+        $maxTPNumber = DB::table('max_number_of')
+        ->where('projectID', $projectID)
+        ->where('category', 'testplan')
+        ->value('maxNumberOf');
+
+        return response()->json([
+            'testPlans' => $testPlans,
+            'maxTestPlanNumber' => $maxTPNumber
+        ], 200);
     }
 
 

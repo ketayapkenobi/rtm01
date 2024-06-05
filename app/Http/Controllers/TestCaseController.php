@@ -35,6 +35,11 @@ class TestCaseController extends Controller
             'project_id' => $request->project_id,
         ]);
 
+        DB::table('max_number_of')
+        ->where('projectID', $request->project_id)
+        ->where('category', 'testcase')
+        ->increment('maxNumberOf');
+
         return response()->json($testcase, 201);
     }
 
@@ -72,17 +77,10 @@ class TestCaseController extends Controller
                 ];
             });
 
-        // Extract the maximum "TC" number from the requirement IDs
-        $maxTCNumber = TestCase::where('project_id', $projectID)
-            ->get()
-            ->map(function ($testcase) {
-                // Use regular expression to extract the "TC" number
-                if (preg_match('/TC(\d+)$/', $testcase->testcaseID, $matches)) {
-                    return (int) $matches[1];
-                }
-                return 0;
-            })
-            ->max();
+        $maxTCNumber = DB::table('max_number_of')
+        ->where('projectID', $projectID)
+        ->where('category', 'testcase')
+        ->value('maxNumberOf');
 
         return response()->json([
             'testcases' => $testcases,
@@ -115,9 +113,21 @@ class TestCaseController extends Controller
         return response()->json($testcase, 200);
     }
 
-    public function destroy(string $id)
+    public function destroy($testcaseID)
     {
-        //
+        // Find the requirement by requirementID
+        $testcase = TestCase::where('testcaseID', $testcaseID)->firstOrFail();
+
+        // Store the project ID for updating max_number_of
+        $projectID = $testcase->project_id;
+
+        // Delete all rows in testcase_requirement with the requirementID
+        DB::table('testcase_requirement')->where('testcase_id', $testcaseID)->delete();
+
+        // Delete the requirement
+        $testcase->delete();
+
+        return response()->json(['message' => 'Test case and associated test case requirements deleted successfully'], 200);
     }
 
     public function checkTestCaseIDExists($testcaseID)
