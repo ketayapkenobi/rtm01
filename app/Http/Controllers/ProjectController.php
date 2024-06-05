@@ -71,8 +71,18 @@ class ProjectController extends Controller
         // Assign selected users to the project
         $project->members()->attach($request->selectedUsers);
 
+        // Insert rows into max_number_of table
+        $data = [
+            ['projectID' => $request->projectID, 'maxNumberOf' => 0, 'category' => 'requirement'],
+            ['projectID' => $request->projectID, 'maxNumberOf' => 0, 'category' => 'testcase'],
+            ['projectID' => $request->projectID, 'maxNumberOf' => 0, 'category' => 'testplan'],
+        ];
+
+        DB::table('max_number_of')->insert($data);
+
         return response()->json($project, 201);
     }
+
 
     public function update($id, Request $request)
     {
@@ -244,6 +254,8 @@ class ProjectController extends Controller
         $requirements = Requirement::where('project_id', $projectID)->get();
         $totalRequirements = $requirements->count();
         $coveredRequirements = 0;
+        $coveredRequirementsList = [];
+        $nonCoveredRequirementsList = [];
         foreach ($requirements as $requirement) {
             $testcaseCount = DB::table('testcase_requirement')
                 ->where('requirement_id', $requirement->requirementID)
@@ -251,6 +263,9 @@ class ProjectController extends Controller
 
             if ($testcaseCount > 0) {
                 $coveredRequirements++;
+                $coveredRequirementsList[] = $requirement->requirementID;
+            } else {
+                $nonCoveredRequirementsList[] = $requirement->requirementID;
             }
         }
 
@@ -258,6 +273,8 @@ class ProjectController extends Controller
         $testcases = TestCase::where('project_id', $projectID)->get();
         $totalTestcases = $testcases->count();
         $coveredTestcases = 0;
+        $coveredTestcasesList = [];
+        $nonCoveredTestcasesList = [];
         foreach ($testcases as $testcase) {
             $testplanCount = DB::table('testplan_testcase')
                 ->where('testcase_id', $testcase->testcaseID)
@@ -265,6 +282,9 @@ class ProjectController extends Controller
 
             if ($testplanCount > 0) {
                 $coveredTestcases++;
+                $coveredTestcasesList[] = $testcase->testcaseID;
+            } else {
+                $nonCoveredTestcasesList[] = $testcase->testcaseID;
             }
         }
 
@@ -272,6 +292,8 @@ class ProjectController extends Controller
         $testplans = TestPlan::where('project_id', $projectID)->get();
         $totalTestplans = $testplans->count();
         $coveredTestplans = 0;
+        $coveredTestplansList = [];
+        $nonCoveredTestplansList = [];
         foreach ($testplans as $testplan) {
             $testexecutionCount = DB::table('test_executions')
                 ->where('testplanID', $testplan->testplanID)
@@ -279,6 +301,9 @@ class ProjectController extends Controller
 
             if ($testexecutionCount > 0) {
                 $coveredTestplans++;
+                $coveredTestplansList[] = $testplan->testplanID;
+            } else {
+                $nonCoveredTestplansList[] = $testplan->testplanID;
             }
         }
 
@@ -299,15 +324,17 @@ class ProjectController extends Controller
             'test_cases_count' => $testCasesCount,
             'test_plans_count' => $testPlansCount,
             'test_executions_count' => $testExecutionsCount,
-            // 'total_requirements' => $totalRequirements,
             'covered_requirements' => $coveredRequirements,
-            // 'total_testcases' => $totalTestcases,
+            'covered_requirements_list' => $coveredRequirementsList,
+            'non_covered_requirements_list' => $nonCoveredRequirementsList,
             'covered_testcases' => $coveredTestcases,
-            // 'total_testplans' => $totalTestplans,
+            'covered_testcases_list' => $coveredTestcasesList,
+            'non_covered_testcases_list' => $nonCoveredTestcasesList,
             'covered_testplans' => $coveredTestplans,
+            'covered_testplans_list' => $coveredTestplansList,
+            'non_covered_testplans_list' => $nonCoveredTestplansList,
             'project_members' => $projectMembers,
         ], 200);
     }
-
 
 }

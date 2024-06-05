@@ -16,6 +16,7 @@ use App\Http\Controllers\StepController;
 use App\Http\Controllers\TestPlanController;
 use App\Http\Controllers\TestExecutionController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\DashboardController;
 
 
 /*
@@ -121,6 +122,10 @@ Route::get('/users/{id}', [UserController::class, 'show']);
 Route::delete('/users/{id}', [UserController::class, 'destroy']);
 Route::get('/users/check/{userID}', [UserController::class, 'checkUserIDExists']);
 Route::get('/users/check/email/{email}', [UserController::class, 'checkEmailExists']);
+
+Route::get('/dashboard', [DashboardController::class, 'getStats']);
+Route::get('/dashboard/barchart', [DashboardController::class, 'getStatsForBarChart']);
+Route::get('/dashboard/piechart', [DashboardController::class, 'getRolesStats']);
 
 Route::get('/roles', [RoleController::class, 'index']);
 
