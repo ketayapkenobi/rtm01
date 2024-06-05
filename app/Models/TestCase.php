@@ -18,6 +18,8 @@ class TestCase extends Model
         'priority_id',
         'status_id',
         'project_id',
+        'created_by',
+        'updated_by',
     ];
 
     public function getPriorityNameAttribute()

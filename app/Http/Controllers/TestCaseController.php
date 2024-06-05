@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Models\TestCase;
+use App\Models\User;
+use Carbon\Carbon;
 
 class TestCaseController extends Controller
 {
@@ -24,6 +26,7 @@ class TestCaseController extends Controller
             'priority_id' => ['required', Rule::exists('priority', 'id')],
             'status_id' => ['required', Rule::exists('status', 'id')],
             'project_id' => ['required', Rule::exists('projects', 'projectID')],
+            'userId' => 'required',
         ]);
 
         $testcase = TestCase::create([
@@ -33,6 +36,7 @@ class TestCaseController extends Controller
             'priority_id' => $request->priority_id,
             'status_id' => $request->status_id,
             'project_id' => $request->project_id,
+            'created_by' => $request->userId,
         ]);
 
         DB::table('max_number_of')
@@ -60,6 +64,10 @@ class TestCaseController extends Controller
                     ->where('testcase_id', $testcase->testcaseID)
                     ->pluck('testplan_id');
 
+                // Fetch creator's and updater's names based on user ID
+                $createdBy = User::where('id', $testcase->created_by)->value('name');
+                $updatedBy = User::where('id', $testcase->updated_by)->value('name');
+
                 return [
                     'id' => $testcase->id,
                     'testcaseID' => $testcase->testcaseID,
@@ -70,8 +78,10 @@ class TestCaseController extends Controller
                     'status_id' => $testcase->status_id,
                     'status_name' => $testcase->status_name,
                     'project_id' => $testcase->project_id,
-                    'created_at' => $testcase->created_at,
-                    'updated_at' => $testcase->updated_at,
+                    'created_by' => $createdBy,
+                    'updated_by' => $updatedBy,
+                    'created_at' => Carbon::parse($testcase->created_at)->format('Y-m-d H:i:s'),
+                    'updated_at' => Carbon::parse($testcase->updated_at)->format('Y-m-d H:i:s'),
                     'requirements' => $requirements,
                     'testplans' => $testplans,
                 ];
@@ -97,6 +107,7 @@ class TestCaseController extends Controller
             'priority_id' => ['required', Rule::exists('priority', 'id')],
             'status_id' => ['required', Rule::exists('status', 'id')],
             'project_id' => ['required', Rule::exists('projects', 'projectID')],
+            'userId' => 'required',
         ]);
 
         $testcase = TestCase::where('testcaseID', $testcaseID)->firstOrFail();
@@ -108,6 +119,7 @@ class TestCaseController extends Controller
             'priority_id' => $request->priority_id,
             'status_id' => $request->status_id,
             'project_id' => $request->project_id,
+            'updated_by' => $request->userId,
         ]);
 
         return response()->json($testcase, 200);

@@ -7,6 +7,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Models\Requirement;
 use App\Models\TestCase;
+use App\Models\User;
+use Carbon\Carbon;
 
 class RequirementController extends Controller
 {
@@ -25,6 +27,7 @@ class RequirementController extends Controller
             'priority_id' => ['required', Rule::exists('priority', 'id')],
             'status_id' => ['required', Rule::exists('status', 'id')],
             'project_id' => ['required', Rule::exists('projects', 'projectID')],
+            'userId' => 'required',
         ]);
 
         $requirement = Requirement::create([
@@ -34,6 +37,7 @@ class RequirementController extends Controller
             'priority_id' => $request->priority_id,
             'status_id' => $request->status_id,
             'project_id' => $request->project_id,
+            'created_by' => $request->userId,
         ]);
 
         // Increment maxNumberOf for category 'requirement'
@@ -65,6 +69,10 @@ class RequirementController extends Controller
                     ->values()
                     ->all();
 
+                // Fetch creator's and updater's names based on user ID
+                $createdBy = User::where('id', $requirement->created_by)->value('name');
+                $updatedBy = User::where('id', $requirement->updated_by)->value('name');
+
                 return [
                     'id' => $requirement->id,
                     'requirementID' => $requirement->requirementID,
@@ -75,25 +83,25 @@ class RequirementController extends Controller
                     'status_id' => $requirement->status_id,
                     'status_name' => $requirement->status_name,
                     'project_id' => $requirement->project_id,
-                    'created_at' => $requirement->created_at,
-                    'updated_at' => $requirement->updated_at,
+                    'created_by' => $createdBy,
+                    'updated_by' => $updatedBy,
+                    'created_at' => Carbon::parse($requirement->created_at)->format('Y-m-d H:i:s'),
+                    'updated_at' => Carbon::parse($requirement->updated_at)->format('Y-m-d H:i:s'),
                     'testCases' => $testCases->all(), // Include related test case IDs
                     'testPlans' => $testPlans, // Include related test plan IDs
                 ];
             });
 
         $maxRNumber = DB::table('max_number_of')
-        ->where('projectID', $projectID)
-        ->where('category', 'requirement')
-        ->value('maxNumberOf');
+            ->where('projectID', $projectID)
+            ->where('category', 'requirement')
+            ->value('maxNumberOf');
 
         return response()->json([
             'requirements' => $requirements,
             'maxRequirementNumber' => $maxRNumber,
         ], 200);
     }
-
-
 
     public function update(Request $request, $requirementID)
     {
@@ -104,6 +112,7 @@ class RequirementController extends Controller
             'priority_id' => ['required', Rule::exists('priority', 'id')],
             'status_id' => ['required', Rule::exists('status', 'id')],
             'project_id' => ['required', Rule::exists('projects', 'projectID')],
+            'userId' => 'required',
         ]);
 
         $requirement = Requirement::where('requirementID', $requirementID)->firstOrFail();
@@ -115,10 +124,12 @@ class RequirementController extends Controller
             'priority_id' => $request->priority_id,
             'status_id' => $request->status_id,
             'project_id' => $request->project_id,
+            'updated_by' => $request->userId,
         ]);
 
         return response()->json($requirement, 200);
     }
+
 
     public function destroy($requirementID)
     {
