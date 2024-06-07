@@ -18,7 +18,7 @@ services:
       - ./:/var/www/html:delegated
     depends_on:
       - php
-      - mysql
+      # - mysql
     networks:
       - artemiz-laravel
 
@@ -34,8 +34,8 @@ services:
       - ./:/var/www/html:delegated
     networks:
       - artemiz-laravel
-    depends_on:
-      - mysql
+    # depends_on:
+    #   # - mysql
 
   composer:
     build:
@@ -83,20 +83,20 @@ services:
     networks:
       - artemiz-laravel
 
-  mysql:
-    image: mysql:8.0
-    container_name: artemiz-mysql
-    environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-      MYSQL_DATABASE: rtm01
-      MYSQL_USER: ronaldo
-      MYSQL_PASSWORD: 123
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - artemiz-laravel
+#   mysql:
+#     image: mysql:8.0
+#     container_name: artemiz-mysql
+#     environment:
+#       MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+#       MYSQL_DATABASE: rtm01
+#       MYSQL_USER: ronaldo
+#       MYSQL_PASSWORD: 123
+#     ports:
+#       - "3306:3306"
+#     volumes:
+#       - mysql-data:/var/lib/mysql
+#     networks:
+#       - artemiz-laravel
 
-volumes:
-  mysql-data:
+# volumes:
+#   mysql-data:
