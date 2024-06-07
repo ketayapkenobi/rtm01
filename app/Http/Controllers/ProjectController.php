@@ -30,13 +30,18 @@ class ProjectController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
 
-        // Get all the projectIDs related to the userID in the project_members table
-        $projectIds = DB::table('project_members')
-                        ->where('userID', $user->id)
-                        ->pluck('projectID');
-
-        // Get the projects based on the projectIDs
-        $projects = Project::whereIn('id', $projectIds)->get();
+        if ($user->role_id == 1) {
+            // If the role is 1, return all projects
+            $projects = Project::all();
+        } else {
+            // Get all the projectIDs related to the userID in the project_members table
+            $projectIds = DB::table('project_members')
+                            ->where('userID', $user->id)
+                            ->pluck('projectID');
+    
+            // Get the projects based on the projectIDs
+            $projects = Project::whereIn('id', $projectIds)->get();
+        }
 
         return response()->json($projects);
     }
@@ -206,6 +211,7 @@ class ProjectController extends Controller
         DB::table('test_plans')->whereIn('testplanID', $deletedTestPlans)->delete();
         DB::table('test_cases')->whereIn('testcaseID', $deletedTestCases)->delete();
         DB::table('requirements')->whereIn('requirementID', $deletedRequirements)->delete();
+        DB::table('project_members')->where('projectID', $project->id)->delete();
 
         // Finally, delete the project itself
         $project->delete();

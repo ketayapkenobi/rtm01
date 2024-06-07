@@ -8,6 +8,7 @@ use App\Models\Requirement;
 use App\Models\TestCase;
 use App\Models\TestPlan;
 use App\Models\TestExecution;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -23,12 +24,21 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function getStatsForBarChart()
+    public function getStatsForBarChart($userID)
     {
         // Get all distinct project IDs from the projects table
-        $projectIDs = Project::pluck('projectID')->toArray();
+        $user = User::where('userID', $userID)->first();
+        $userRole = $user->role_id;
+        $currentUserID = $user->id;
 
         $stats = [];
+
+        if ($userRole == 1) {
+            $projectIDs  = Project::pluck('projectID')->toArray();
+        } else {
+            $projectIDs  = DB::table('project_members')->where('userID', $currentUserID)->pluck('projectID')->toArray();
+            $projectIDs = Project::whereIn('id', $projectIDs)->pluck('projectID')->toArray();
+        }
 
         foreach ($projectIDs as $projectID) {
             // Find all the test plan IDs for the current project
@@ -68,6 +78,61 @@ class DashboardController extends Controller
         ];
     }
 
+    public function getCoverageStatsForAllProjects($userID)
+    {
+        $user = User::where('userID', $userID)->first();
+        $userRole = $user->role_id;
+        $currentUserID = $user->id;
+
+        $coverageStats = [];
+
+        if ($userRole == 1) {
+            $projects = Project::all();
+        } else {
+            $projectIDs = DB::table('project_members')->where('userID', $currentUserID)->pluck('projectID')->toArray();
+            $projects = Project::whereIn('id', $projectIDs)->get();
+        }
+
+        foreach ($projects as $project) {
+            $projectID = $project->projectID;
+
+            // Get all requirements for the project
+            $requirements = Requirement::where('project_id', $projectID)->get();
+            $totalRequirements = $requirements->count();
+            $coveredRequirements = 0;
+            $coveredRequirementsList = [];
+            $nonCoveredRequirementsList = [];
+
+            foreach ($requirements as $requirement) {
+                $testcaseCount = DB::table('testcase_requirement')
+                    ->where('requirement_id', $requirement->requirementID)
+                    ->count();
+
+                if ($testcaseCount > 0) {
+                    $coveredRequirements++;
+                    $coveredRequirementsList[] = $requirement->requirementID;
+                } else {
+                    $nonCoveredRequirementsList[] = $requirement->requirementID;
+                }
+            }
+
+            $coverageStats[] = [
+                'projectID' => $projectID,
+                'totalRequirements' => $totalRequirements,
+                'coveredRequirements' => $coveredRequirements,
+                'nonCoveredRequirements' => $totalRequirements - $coveredRequirements,
+                'coveredRequirementsList' => $coveredRequirementsList,
+                'nonCoveredRequirementsList' => $nonCoveredRequirementsList,
+            ];
+        }
+
+        return response()->json([
+            'coverageStats' => $coverageStats,
+        ]);
+    }
+
+
+
     public function getRolesStats()
     {
         // Get the total number of users for each role
@@ -87,6 +152,36 @@ class DashboardController extends Controller
 
         return response()->json([
             'userStats' => $userStats,
+        ]);
+    }
+
+    public function getCoverageStatsForAllRequirements()
+    {
+        $requirements = Requirement::all();
+        $totalRequirements = $requirements->count();
+        $coveredRequirements = 0;
+        $coveredRequirementsList = [];
+        $nonCoveredRequirementsList = [];
+
+        foreach ($requirements as $requirement) {
+            $testcaseCount = DB::table('testcase_requirement')
+                ->where('requirement_id', $requirement->requirementID)
+                ->count();
+
+            if ($testcaseCount > 0) {
+                $coveredRequirements++;
+                $coveredRequirementsList[] = $requirement->requirementID;
+            } else {
+                $nonCoveredRequirementsList[] = $requirement->requirementID;
+            }
+        }
+
+        return response()->json([
+            'totalRequirements' => $totalRequirements,
+            'coveredRequirements' => $coveredRequirements,
+            'nonCoveredRequirements' => $totalRequirements - $coveredRequirements,
+            'coveredRequirementsList' => $coveredRequirementsList,
+            'nonCoveredRequirementsList' => $nonCoveredRequirementsList,
         ]);
     }
 }

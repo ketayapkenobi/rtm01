@@ -124,8 +124,10 @@ Route::get('/users/check/{userID}', [UserController::class, 'checkUserIDExists']
 Route::get('/users/check/email/{email}', [UserController::class, 'checkEmailExists']);
 
 Route::get('/dashboard', [DashboardController::class, 'getStats']);
-Route::get('/dashboard/barchart', [DashboardController::class, 'getStatsForBarChart']);
+Route::get('/dashboard/barchart/{userID}', [DashboardController::class, 'getStatsForBarChart']);
 Route::get('/dashboard/piechart', [DashboardController::class, 'getRolesStats']);
+Route::get('/dashboard/barchart-req/{userID}', [DashboardController::class, 'getCoverageStatsForAllProjects']);
+Route::get('/dashboard/piechart-req', [DashboardController::class, 'getCoverageStatsForAllRequirements']);
 
 Route::get('/roles', [RoleController::class, 'index']);
 
