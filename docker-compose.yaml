@@ -13,7 +13,7 @@ services:
         - GID=${GID:-1000}
     container_name: artemiz-nginx
     ports:
-      - 80:80
+      - 7777:80
     volumes:
       - ./:/var/www/html:delegated
     depends_on:
