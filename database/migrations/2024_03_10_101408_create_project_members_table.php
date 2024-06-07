@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('project_members', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('projectID');
-            $table->foreign('projectID')->references('projectID')->on('projects')->onDelete('cascade');
+            // $table->foreign('projectID')->references('projectID')->on('projects')->onDelete('cascade');
             $table->unsignedBigInteger('userID');
-            $table->foreign('userID')->references('userID')->on('users')->onDelete('cascade');
+            // $table->foreign('userID')->references('userID')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

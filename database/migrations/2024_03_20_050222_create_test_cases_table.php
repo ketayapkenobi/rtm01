@@ -21,9 +21,9 @@ return new class extends Migration
             $table->string('project_id'); 
             $table->timestamps();
 
-            $table->foreign('priority_id')->references('id')->on('priority');
-            $table->foreign('status_id')->references('id')->on('status');
-            $table->foreign('project_id')->references('projectID')->on('projects'); 
+            // $table->foreign('priority_id')->references('id')->on('priority');
+            // $table->foreign('status_id')->references('id')->on('status');
+            // $table->foreign('project_id')->references('projectID')->on('projects'); 
         });
     }
 
