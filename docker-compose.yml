@@ -19,7 +19,7 @@ services:
         volumes:
             - ./:/var/www/html:delegated
         depends_on:
-            - php
+            - artemiz_php
         networks:
             - artemiz
 
@@ -52,7 +52,7 @@ services:
             - ./:/var/www/html:delegated
         working_dir: /var/www/html
         depends_on:
-            - php
+            - artemiz_php
         user: laravel
         entrypoint: ["composer", "--ignore-platform-reqs"]
         networks:
