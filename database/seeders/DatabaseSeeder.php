@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
         \App\Models\User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'userID' => '10001',
+            'role_id' => 1,
         ]);
 
         $this->call(RolesTableSeeder::class);
