@@ -4,7 +4,7 @@ networks:
     artemiz:
 
 services:
-    artemiz_site:
+    site:
         env_file:
             - .env
         build:
@@ -19,11 +19,11 @@ services:
         volumes:
             - ./:/var/www/html:delegated
         depends_on:
-            - artemiz_php
+            - php
         networks:
             - artemiz
 
-    artemiz_php:
+    php:
         env_file:
             - .env
         build:
@@ -38,7 +38,7 @@ services:
         networks:
             - artemiz
 
-    artemiz_composer:
+    composer:
         env_file:
             - .env
         build:
@@ -52,13 +52,13 @@ services:
             - ./:/var/www/html:delegated
         working_dir: /var/www/html
         depends_on:
-            - artemiz_php
+            - php
         user: laravel
         entrypoint: ["composer", "--ignore-platform-reqs"]
         networks:
             - artemiz
 
-    artemiz_artisan:
+    artisan:
         env_file:
             - .env
         build:
