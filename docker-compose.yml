@@ -1,0 +1,120 @@
+version: "3.8"
+
+networks:
+    artemiz:
+
+services:
+    site:
+        env_file:
+            - .env
+        build:
+            context: ./dockerfiles
+            dockerfile: nginx.dockerfile
+            args:
+                - UID=${DOCKER_UID:-1000}
+                - GID=${DOCKER_GID:-1000}
+        container_name: artemiz-nginx
+        ports:
+            - ${DOCKER_NGINX_PORT}:80
+        volumes:
+            - ./:/var/www/html:delegated
+        depends_on:
+            - php
+        networks:
+            - artemiz
+
+    php:
+        env_file:
+            - .env
+        build:
+            context: .
+            dockerfile: ./dockerfiles/php.dockerfile
+            args:
+                - UID=${DOCKER_UID:-1000}
+                - GID=${DOCKER_GID:-1000}
+        container_name: artemiz-php
+        volumes:
+            - ./:/var/www/html:delegated
+        networks:
+            - artemiz
+
+    composer:
+        env_file:
+            - .env
+        build:
+            context: ./dockerfiles
+            dockerfile: composer.dockerfile
+            args:
+                - UID=${DOCKER_UID:-1000}
+                - GID=${DOCKER_GID:-1000}
+        container_name: composer
+        volumes:
+            - ./:/var/www/html:delegated
+        working_dir: /var/www/html
+        depends_on:
+            - php
+        user: laravel
+        entrypoint: ["composer", "--ignore-platform-reqs"]
+        networks:
+            - artemiz
+
+    #   npm:
+    #     image: node:14.17
+    #     container_name: npm
+    #     volumes:
+    #       - ./:/var/www/html:delegated
+    #     # ports:
+    #     #   - 3000:3000
+    #     #   - 3001:3001
+    #     working_dir: /var/www/html
+    #     entrypoint: ["npm"]
+    #     networks:
+    #       - bolt-sa-dev
+
+    artisan:
+        env_file:
+            - .env
+        build:
+            context: ./dockerfiles
+            dockerfile: php.dockerfile
+            args:
+                - UID=${DOCKER_UID:-1000}
+                - GID=${DOCKER_GID:-1000}
+        container_name: artisan
+        volumes:
+            - ./:/var/www/html:delegated
+        working_dir: /var/www/html
+        entrypoint: ["php", "/var/www/html/artisan"]
+        networks:
+            - artemiz
+#   scheduler:
+#     env_file:
+#     - .env
+#     build:
+#       context: ./dockerfiles
+#       dockerfile: php.dockerfile
+#       args:
+#         - UID=${DOCKER_UID:-1000}
+#         - GID=${DOCKER_GID:-1000}
+#     container_name: scheduler
+#     volumes:
+#       - ./:/var/www/html:delegated
+#     working_dir: /var/www/html
+#     entrypoint: ["php", "/var/www/html/artisan", "schedule:work"]
+#     networks:
+#       - bolt-sa-dev
+
+# mysql:
+#   image: mysql:5.7.32
+#   container_name: mysql-flc
+#   environment:
+#     MYSQL_DATABASE: flc
+#     MYSQL_USER: flcroot
+#     MYSQL_PASSWORD: abcd1234
+#     MYSQL_ROOT_PASSWORD: root@1234
+#   # ports:
+#   #   - 3307:3306
+#   volumes:
+#     - ./dockerfiles/mysql:/var/lib/mysql
+#   networks:
+#     - laravel

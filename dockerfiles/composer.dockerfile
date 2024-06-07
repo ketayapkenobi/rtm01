@@ -12,4 +12,6 @@ RUN delgroup dialout
 RUN addgroup -g ${GID} --system laravel
 RUN adduser -G laravel --system -D -s /bin/sh -u ${UID} laravel
 
+RUN chown laravel:laravel /var/www/html
+
 WORKDIR /var/www/html
